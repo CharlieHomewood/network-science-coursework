@@ -2,4 +2,13 @@
 name = "network-science-coursework"
 version = "0.1.0"
 requires-python = ">= 3.12.10"
-dependencies = []
+dependencies = [
+    "fastparquet>=2025.12.0",
+    "matplotlib>=3.10.8",
+    "networkx>=3.6.1",
+    "polars>=1.38.1",
+    "pyarrow>=23.0.1",
+    "seaborn>=0.13.2",
+    "statsbombpy>=1.16.0",
+    "tqdm>=4.67.3",
+]

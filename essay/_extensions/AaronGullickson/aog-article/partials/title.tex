@@ -1,0 +1,33 @@
+$-- Provides configuration of document metadata for writing the title block.
+$-- Note that in addition to these templates and partials, Quarto will also make normalized authors and affiliations data available to the template,
+
+\usepackage{titling}
+\setlength{\droptitle}{-1.5cm}
+
+$if(title)$
+\title{$title$$if(thanks)$\thanks{$thanks$}$endif$}
+$endif$
+% subtitles do not seem to work with article class?
+%$if(subtitle)$
+%\usepackage{etoolbox}
+%\makeatletter
+%\providecommand{\subtitle}[1]{% add subtitle to \maketitle
+%  \apptocmd{\@title}{\par {\large #1 \par}}{}{}
+%}
+%\makeatother
+%$endif$
+%\subtitle{$subtitle$}
+
+\author{
+$for(by-author)$
+{\bfseries \normalsize $it.name.literal$}\\%
+\vspace{10pt}%
+$endfor$
+$if(wordcount)$
+{\footnotesize Word count: $wordcount$}
+$endif$
+}
+
+\predate{}
+\postdate{}
+\date{}
