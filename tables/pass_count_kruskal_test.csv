@@ -1,0 +1,2 @@
+Metric,Winning median,Drawing median,Losing median,Kruskal statistic,Raw p-value,Corrected p-value
+pass_count,23.0,22.0,18.416666666666668,56.987685747251476,4.2196970454656133e-13,4.2196970454656133e-13

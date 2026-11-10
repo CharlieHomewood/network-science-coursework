@@ -36,13 +36,17 @@
 \titleformat*{\section}{\Large\sffamily\bfseries\raggedright}
 \titleformat*{\subsection}{\large\sffamily\bfseries\raggedright}
 \titleformat*{\subsubsection}{\normalsize\sffamily\bfseries\raggedright}
-\titleformat*{\paragraph}{\small\sffamily\bfseries\raggedright}
+\titleformat{\paragraph}[block]
+  {\small\sffamily\bfseries\raggedright}
+  {\theparagraph}
+  {1em}
+  {}
 
 %\titlespacing{<command>}{<left>}{<before-sep>}{<after-sep>}
 % Starred version removes indentation in following paragraph
-\titlespacing*{\section}{0em}{2em}{0.1em}
-\titlespacing*{\subsection}{0em}{1.25em}{0.1em}
-\titlespacing*{\subsubsection}{0em}{0.75em}{0em}
+\titlespacing*{\section}{0em}{1.5em}{1em}
+\titlespacing*{\subsection}{0em}{1.25em}{1em}
+\titlespacing*{\subsubsection}{0em}{0.75em}{1em}
 
 % ------------------
 % Headers/Footers
@@ -65,7 +69,18 @@
 % Captions
 % ------------------
 \usepackage[labelfont=bf,labelsep=period]{caption}
-\captionsetup[figure]{font=footnotesize,justification=raggedright,singlelinecheck=false,format=hang}
+\captionsetup[figure]{font=footnotesize,justification=centering,singlelinecheck=false,format=hang}
+
+\usepackage{float}
+\usepackage[section]{placeins}
+
+\usepackage{enumitem}
+\setlist[itemize]{
+    topsep=0.5em,   % space above and below the list
+    itemsep=0.5em,   % space between items
+    parsep=0em,      % space between paragraphs within an item
+    partopsep=0em    % extra space if list starts a new paragraph
+}
 
 
 % ---------------------------

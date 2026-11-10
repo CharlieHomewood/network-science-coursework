@@ -18,8 +18,8 @@ contributes:
       geometry: margin=1in
       fig-width: 6.5   # set to the (full width - margins) of letter   
       fig-pos: "!t"
-      colorlinks: true
-      urlcolor: red
+      colorlinks: false
+      urlcolor: blue
       block-headings: false # to deal with titlesec problems
       include-in-header: header.tex
       template-partials:

@@ -3,6 +3,19 @@ from statsbombpy import sb
 from tqdm import tqdm
 import polars as pl
 
+def reformat_datetime_columns(df):
+
+    for col in df.columns:
+        if df[col].dtype == pl.Object:
+            try:
+                df = df.with_columns([
+                    pl.col(col).str.strptime(pl.Datetime, fmt="%Y-%m")
+                ])
+            except Exception:
+                pass
+    
+    return df
+
 project_root = Path(__file__).resolve().parent.parent
 
 competition_id = 37 # WSL Competition ID
@@ -13,6 +26,12 @@ season_with_match_ids_list = []
 competitions_df = sb.competitions()
 season_ids = competitions_df[competitions_df["competition_id"] == competition_id]["season_id"].to_list()
 
+
+# Collect matches data
+matches_dfs = []
+for season_id in season_ids:
+    df = sb.matches(competition_id=competition_id, season_id=season_id)
+    matches_dfs.append(df)
 
 # Initialise list of dictionaries for each season.
 for season_id in season_ids:
@@ -27,31 +46,30 @@ for season_id in season_ids:
 
 
 # Create list of events dataframes.
-dfs = []
+events_dfs = []
 for season in season_with_match_ids_list:
     for match_id in tqdm(season["match_ids"], desc=f"Processing Matching for the {season["season_name"]} WSL Season"):
         df = sb.events(match_id=match_id)
         df["season_id"] = season["season_id"]
         df["season_name"] = season["season_name"]
-        dfs.append(df)
+        events_dfs.append(df)
 
 
-# Concatenate the list of dataframes and save it as a parquet file.
-pl_dfs = [pl.from_pandas(df) for df in dfs]
+# Concatenate the list of dataframes and reformat datetime columns.
+matches_df = pl.concat([pl.from_pandas(df) for df in matches_dfs], rechunk=True)
+matches_df = reformat_datetime_columns(matches_df)
 
-final_df = pl.concat(pl_dfs, rechunk=True)
+events_df = pl.concat([pl.from_pandas(df) for df in events_dfs], rechunk=True)
+events_df = reformat_datetime_columns(events_df)
 
-for col in final_df.columns:
-    if final_df[col].dtype == pl.Object:
-        try:
-            final_df = final_df.with_columns([
-                pl.col(col).str.strptime(pl.Datetime, fmt="%Y-%m")
-            ])
-        except Exception:
-            pass
 
 # Write to Parquet
-final_df.write_parquet(
+matches_df.write_parquet(
+    f"{project_root}/data/matches_data.parquet",
+    compression="zstd"
+)
+
+events_df.write_parquet(
     f"{project_root}/data/events_data.parquet",
     compression="zstd"
 )

@@ -1,90 +1,330 @@
 ---
-title: "INSERT TITLE"
-shorttitle: "INSERT TITLE"
+title: "Do Teams' Passing Network Change Significantly When Winning, Drawing or Losing Matches?"
+shorttitle: "Passing Network Change When Winning, Drawing or Losing"
 shortauthors: Candidate No. 291723
 author:
   - name: "Candidate Number: 291723"
-wordcount: XXXX
+wordcount: 3302
 reference-section-title: Bibliography
 bibliography: bibliography.bib
-csl: https://www.zotero.org/styles/american-journal-of-sociology
+csl: https://www.zotero.org/styles/apa
 format:
   aog-article-pdf:
     keep-tex: false
 ---
 
+```{python}
+#| echo: False
+import pickle
+import pandas as pd
+
+with open("../metrics/number_of_matches.pkl", "rb") as f:
+    number_of_matches = pickle.load(f)
+
+with open("../metrics/number_of_graphs.pkl", "rb") as f:
+    number_of_graphs = pickle.load(f)
+
+match_state_kruskal_tests_df = pd.read_csv("../tables/match_state_kruskal_tests.csv")
+match_state_pairwise_tests_df = pd.read_csv("../tables/match_state_pairwise_tests.csv")
+pass_count_kruskal_test_df = pd.read_csv("../tables/pass_count_kruskal_test.csv")
+pass_count_dunn_pairwise_tests_df = pd.read_csv("../tables/pass_count_dunn_pairwise_tests.csv")
+pass_count_control_results_df = pd.read_csv("../tables/pass_count_control_results.csv")
+```
+
 # Introduction
 
-Ipsum interdum enim dapibus luctus potenti viverra ridiculus vulputate! Pretium ante euismod auctor semper proin lacinia augue vitae. Magnis vivamus dis dapibus dapibus tristique vestibulum venenatis accumsan lobortis suscipit faucibus. Dis **scelerisque** egestas sodales tempor nisl accumsan conubia sem mauris mi himenaeos. Facilisis curabitur habitant quam malesuada facilisis inceptos phasellus rutrum vulputate etiam primis. Na primis?
+Football matches involve continual interactions between players on the same team, who work together to create attacking situations by carrying or passing the ball. Over a match, a team's passes can therefore be considered as a player passing network [@bulduUsingNetworkScience2018], where players are represented by nodes and passes between them by directed edges.
 
-Consectetur *sodales* suscipit ultrices venenatis sagittis hendrerit lacus. Imperdiet nunc rhoncus ornare pharetra platea ut blandit nec senectus montes quisque purus. Phasellus rutrum rutrum aliquet rutrum erat scelerisque non augue vulputate suspendisse lacinia commodo aptent vel. Mattis suscipit himenaeos rhoncus integer fames aliquam.
+Passing networks may be considered statically, representing the cumulative number of passes across a whole match or up to a specific time point, such as half-time. This is useful for evaluating overall team or player performance [@panEvolutionPassingNetwork2025], and has also been extended to multiplex networks, where different pass types are represented across separate layers [@beheshtian-ardakaniCMPNModelingAnalysis2023]. Passing network may also be considered as temporal networks [@holmeTemporalNetworks2012]. In a temporal passing network, directed edges exist at the timestamp at which the pass occurred between player $i$ and player $j$. While this network can still be observed cumulatively at a given time point, the added temporal dimension allows network dynamics to be explored. For example, @caoStudyStateDynamics2025 used non-overlapping $2$ and $5$-minute sliding windows over pass-event data from the $2018$ FIFA World Cup Final to examine how graph metrics such as global clustering coefficient and network centralisation changed over the match, and to identify emergent passing "states" through unsupervised clustering.
 
-1.  Sit pharetra ut lacus tortor sodales convallis?
-2.  Molestie egestas fermentum aliquam convallis fames dictum?
-3.  Consectetur vehicula habitant porttitor volutpat velit augue eleifend rutrum accumsan quam pretium pretium?
+Temporal passing networks may vary with match status. For instance, a team winning early may press their advantage and increase passing tempo, whereas a team winning late may reduce tempo and circulate possession to control the game. Previous work has shown that match status can influence football behaviours such as possession strategy and passing sequences [@lagoInfluenceMatchLocation2009; @paixaoHowDoesMatch2015]. @pracaInfluenceMatchStatus2019 examined this during the $2018$ FIFA World Cup by constructing adjacency matrices for each team’s winning, drawing and losing states. They found that density and clustering did not significantly differ between states. However, aggregating passes from each match state into single matrices may obscure within-match variation, since winning periods occur at different moments and under different levels of fatigue, pressure, or tactical adjustment. A rolling-window temporal network approach instead preserves local changes in network structure and allows the same team’s passing behaviour to be compared across short periods. This enables analysis of whether match status is associated with changes in network topology and dynamics over time, rather than only in aggregate.
 
-Consectetur ullamcorper pharetra mattis leo himenaeos magnis non est non sagittis. Nec rutrum aptent sapien convallis euismod taciti felis interdum torquent suspendisse. Ultrices auctor hac ad arcu urna leo integer. Torquent turpis accumsan suscipit cum laoreet blandit ante molestie netus a. Sociosqu placerat purus mollis senectus blandit magna quis pharetra sodales. Platea dui felis porttitor leo enim aenean interdum mauris libero primis volutpat vulputate. Ultrices ullamcorper magna consequat vehicula leo massa at erat sapien arcu scelerisque.
+This project therefore aims to explore how teams' temporal passing networks differ when they are winning, drawing, or losing. Using event data from `{python} number_of_matches` WSL matches across three seasons, temporal passing networks were constructed with non-overlapping five-minute rolling windows, each labelled with the team's match status at that time. Topological metrics, including global clustering coefficient, density, reciprocity and out-degree centralisation, and temporal metrics, including median inter-event time and burstiness, were then measured across each temporal window rather than in a single aggregate network for each match state.
 
-# Background
+# Methods
 
-Ipsum scelerisque id tellus luctus malesuada eget aptent nullam. Urna nec ad habitant sollicitudin dui porttitor tortor nisl augue. Class quam at metus mattis condimentum lacus gravida hendrerit. Tincidunt nullam laoreet facilisis dui bibendum faucibus urna.
+## Dataset Card
 
-Adipiscing habitasse integer sed fusce phasellus morbi libero mauris scelerisque fusce! Phasellus proin sem potenti torquent potenti ultrices orci bibendum morbi. Venenatis in vitae platea ligula orci dictumst pulvinar eleifend id ligula? Nisi vel mus tellus porttitor justo class cras orci est. Iaculis pretium tristique euismod facilisis vestibulum luctus lobortis quam tellus quis cum facilisis. Curabitur est parturient habitant proin elementum nascetur.
+The dataset used in this report corresponds to a set of `{python} number_of_graphs` temporal association football passing networks corresponding to each team's set of completed passes from all `{python} number_of_matches` WSL matches played across the $2018/19$, $2019/20$ and $2020/21$ seasons.
 
-## Subsection 1
+These networks are derived from datasets from StatsBomb's Open Data repository [@StatsbombOpendata2026], retrieved via the `statsbombpy` package [@Statsbombpy2026]. The `events` and `matches` data from each season were imported and preprocessed to combine match data such as kick-off times with events in order to produce complete timestamps for each pass event, necessary to produce temporal edges. 
 
-Amet ridiculus magna ut pulvinar viverra himenaeos dignissim malesuada elementum montes. Luctus libero torquent praesent eleifend pretium convallis dictumst dictum! Porta erat senectus class pellentesque lobortis curabitur non pulvinar varius nibh lobortis fermentum sem? Volutpat id curabitur mattis egestas netus habitasse purus aliquam montes. Pellentesque pellentesque placerat integer varius sagittis curabitur laoreet nunc maecenas ullamcorper.
+The public data user agreement for the StatsBomb Open Data repository can be found at: https://github.com/statsbomb/open-data/blob/master/LICENSE.pdf
 
-Amet rutrum a venenatis mi lectus venenatis nullam purus libero. Pulvinar dapibus nisl dapibus ornare dignissim nibh congue elementum pharetra natoque cum ac laoreet tortor facilisi penatibus sollicitudin.
+This dataset is intended to support exploration of this report's research question, but could feasibly be used for any research project involving the study temporal passing networks in soccer. This dataset does not constitute a random sample of football matches as such, instead being limited to a handful of season from a particular competition. Inferences made from this dataset may be seen as representative of passing networks for WSL matches during $2018-21$, which may not reflect different time periods or competitions.
 
-## Subsection 2
+### Dataset Composition
 
-Adipiscing ad rhoncus nunc molestie sed feugiat? Imperdiet vivamus montes himenaeos sagittis urna nec felis vehicula nec pretium tortor? Molestie natoque sociis aenean mollis donec ornare cursus parturient tortor erat. Volutpat mi natoque sodales et hac ultricies eu pulvinar primis semper. Vitae est curabitur blandit montes tortor eros senectus porttitor maecenas.
+@fig-degree-distribution shows the overall degree distribution across all `{python} number_of_graphs` temporal graphs. We can see that $k=10$ comprises the most frequent average degree count across the graphs. Degrees greater than $10$ are present due to substitutions, which shows lower average frequencies reflecting their lower amount of playing time and thus opportunities to pass or be passed to.
 
-### Subsubsection
+![Boxplot for Degree Distribution Across All Graphs]("../figures/degree_distribution_boxplot.png"){width=85% fig-pos="H" #fig-degree-distribution}
 
-Sit nunc lacus sapien augue ornare magnis massa odio velit maecenas mauris. Molestie justo proin venenatis hac congue facilisi suscipit arcu litora quam varius urna. Lacinia montes convallis ante sapien orci platea rutrum. Gravida dignissim mauris bibendum sollicitudin libero primis ultrices enim aliquam dictum! Vivamus sociis odio non vivamus ridiculus. Libero vitae cursus montes aptent est quisque sociosqu fringilla posuere lacinia sagittis. Quisque orci cum nulla sollicitudin duis nisi.
+This project uses $6$ graph metrics in total. @fig-graph-metrics-distributions shows the distribution of each of these metrics across each graph. For each graph, each metric is measured over 5-minute non-overlapping rolling windows and then averaged to produce an overall score for the graph.
 
-Ipsum fringilla natoque sem praesent auctor tellus viverra convallis nullam quis risus. Mus natoque cras facilisi ac blandit maecenas fringilla natoque varius. Aptent mauris ac nunc dis habitant penatibus torquent dictumst platea class sociis. Sodales mattis augue libero vestibulum interdum condimentum arcu ridiculus massa lobortis. Orci pretium dictumst sociosqu fringilla praesent faucibus tempus ultrices natoque. Risus potenti class nascetur molestie augue a justo vehicula vivamus? Molestie natoque lectus rhoncus sociosqu ligula semper mattis urna mi quis dignissim.
+![Distributions of Graph Summary Statistics Across All Graphs]("../figures/graph_metrics_distributions.png"){width=100% fig-pos="H" #fig-graph-metrics-distributions}
 
-# Data and Methods
+## Topological Metrics
 
-Adipiscing pretium duis penatibus habitasse nisi metus parturient convallis mattis. Porta pharetra rhoncus dis massa nulla ornare egestas! Ante leo cursus mauris eleifend potenti donec tempus. Fusce ultricies aptent accumsan himenaeos netus augue felis nibh. Duis commodo himenaeos aliquam integer.
+### Clustering Coefficient
 
-Lorem lobortis lectus pellentesque sapien vivamus eros felis cum. Mattis risus euismod vivamus vel mi nostra euismod euismod praesent aliquam? Sagittis posuere bibendum turpis arcu maecenas gravida leo sollicitudin primis. Ullamcorper lacinia laoreet tincidunt mollis torquent semper. Sem nascetur eleifend gravida nostra magnis arcu gravida facilisis sollicitudin? Cum curae placerat et auctor faucibus arcu ad mauris sollicitudin nunc! Posuere iaculis arcu dapibus dis ullamcorper pellentesque penatibus ultrices sed aenean ligula ullamcorper donec aliquam.
+One aspect of passing behaviour we can consider is how often trios of players form passing combinations. A common possession playstyle, known as "positional play" [@PositionalPlayFootball], involves fluidly moving players to create numerical overloads and passing combinations to progress the ball into dangerous attacking positions. This contrasts with "direct play", which avoids extended passing combinations and instead moves the ball quickly into dangerous areas [@tengaEffectPlayingTactics2010]. These behaviours may also vary by match status: winning teams may become more clustered earlier in matches as they seek to dominate possession and control the game, whereas teams losing late may become less clustered as they play more directly in pursuit of an equaliser. One graph metric which can measure these variations in passing style is the global clustering coefficient.
 
-Lit nam mus class aliquam volutpat purus mauris ultricies aptent dignissim . Iaculis pulvinar at inceptos sociosqu blandit tristique ridiculus et sagittis mus justo. Suspendisse commodo nullam risus molestie pulvinar elementum malesuada consequat non velit augue. Vehicula id purus vulputate metus dis lectus magna purus nullam scelerisque interdum. Montes quis sem convallis vehicula orci habitasse metus nullam imperdiet faucibus dignissim! Na dignissim. 
+$$
+C=\frac{N_{\text{closed triplets}}}{N_{\text{triplets}}}
+$$ {#eq-global-clustering-coef}
 
-Onsectetur magnis nisi porttitor massa vivamus iaculis vulputate suscipit vehicula ante nisl? Tempor porttitor netus aliquet inceptos etiam ornare etiam. Suscipit nascetur lacus magna tempus luctus eu. Nisl vitae himenaeos nullam lacinia aenean potenti sociis volutpat feugiat dignissim pellentesque!
+The global clustering coefficient measures the proportion of closed triplets to total triplets in the network. Figure 3 shows that a closed triplet requires a directed edge between each node in the triplet, whereas a triplet is simply three nodes connected by two directed edges, with edge direction allowed to vary. A higher clustering coefficient therefore corresponds to a greater proportion of passing triangles within a temporal window, potentially indicative of positional play.
+
+```{=latex}
+\begin{figure}[ht]
+\centering
+
+\begin{tikzpicture}[
+  node/.style={circle, draw, minimum size=1cm}
+]
+
+\node[draw=none] at (0,2.2) {\textbf{Closed Triplet}};
+\node[draw=none] at (5,2.2) {\textbf{Triplet}};
+
+% Closed triplet
+\node[node] (A) at (0,1) {A};
+\node[node] (B) at (-1,-1) {B};
+\node[node] (C) at (1,-1) {C};
+
+\draw[->] (A) -- (B);
+\draw[->] (B) -- (C);
+\draw[->] (C) -- (A);
+
+% Open triplet
+\node[node] (D) at (4,1) {A};
+\node[node] (E) at (5,-1) {B};
+\node[node] (F) at (6,1) {C};
+
+\draw[->] (D) -- (E);
+\draw[->] (E) -- (F);
+
+\end{tikzpicture}
+
+\caption{Examples of a Directed Closed Triplet and a Directed Triplet}
+\label{fig-triplets}
+\end{figure}
+```
+
+### Density
+
+Extending beyond passing triangles, we can also consider more globally how connected players are via passes across the temporal network. We might expect teams' passing networks to become denser during winning phases as they utilise more players to control possession, whereas losing teams may exhibit lower density as they struggle to maintain possession.
+
+For a given temporal window, there exists a maximum number of unique links between pairs of players. If $n$ players are involved, this maximum is simply $n\times(n−1)$. We can therefore consider density as the proportion of actual observed links $L$ to this maximum.
+
+$$
+D = \frac{L}{n(n-1)}
+$$ {#eq-density}
+
+### Reciprocity
+
+Directness in passing behaviour may also be captured by considering how often a pass from player $i \to j$ is reciprocated by $j \to i$ within a temporal window. More direct passing behaviour, potentially during drawing phases late in a match where both teams attempt to score a winning goal, would exhibit fewer reciprocal passes, as the aim is to progress the ball quickly into attacking situations rather than cycle possession through the team. Reciprocity therefore considers the ratio of reciprocated edges to the total number of edges in a temporal window.
+
+$$
+r = \frac{E_{i \to j, j \to i}}{E_{\text{total}}}
+$$ {#eq-reciprocity}
+
+### Out Degree Centralisation
+
+The previous metrics help to characterise passing styles. We might also consider the role of playmakers across different match statuses. If one or a few players are responsible for a disproportionate number of passes, this may indicate playmakers influencing passing behaviour. A winning team may conceivably become less reliant on a single playmaker as they circulate the ball among more players, whereas a drawing team may funnel possession through specific players who are effective at creating chances.
+
+Out degree refers to the number of outgoing directed edges from a node, or how many passes a player made. Since playmakers tend to make more passes than their team's average, they would usually have a higher out degree. Considering the out degree of every node within a temporal window, we can compare each value with the highest out degree in the network. Summing these differences and normalising by the maximum possible sum gives out degree centralisation. A higher value therefore suggests greater reliance on playmakers during a temporal window.
+
+$$
+C_{\text{out}} = \frac{\sum_{i=1}^{n}(k_{\text{out}}^{\text{max}} - k_{\text{out}}^{i})}{(n-1)(n-2)}
+$$ {#eq-out-degree-centralisation}
+
+## Temporal Metrics
+
+Whilst topological metrics evaluate passing behaviour through the overall structure of the network, temporal metrics measure dynamics in how the network evolves over time.
+
+### Median Inter-Event Time
+
+Passing behaviour is often characterised by tempo. A faster passing tempo may indicate a team chasing a winning or equalising goal, whereas a lower tempo may reflect a more controlled approach by a team already in the lead. To explore tempo, we can arrange the time intervals $\Delta (t_{i-1}, t_{i})$ between $n$ passes for a given temporal window in ascending order.
+
+$$
+\Delta (t_{2}, t_{1}) \le \dots \le \Delta (t_{i-1}, t_{i}) \le \dots \le \Delta (t_{n-1}, t_{n})
+$$ {#eq-time-interval-ordered}
+
+The median inter-event time takes the median of this ordered interval sequence, providing an indication of passing tempo whilst avoiding the influence of outliers, such as one long interval in an otherwise fast-tempo passing network. A higher median inter-event time therefore suggests a lower passing tempo.
+
+### Burstiness
+
+Median inter-event time gives a measure of overall passing tempo. However, passes within a window may occur irregularly. A more regular tempo may indicate a controlled possession approach by a winning team, whereas greater irregularity may reflect a drawing team battling for possession amid high turnover.
+
+Given a set of time intervals from temporal edges within a temporal window, burstiness can be calculated using the mean $\mu$ and standard deviation $\sigma$ of these intervals. The ratio of their difference to their sum provides a burstiness score. A higher burstiness value suggests greater irregularity in passing intervals.
+
+$$
+B = \frac{\sigma - \mu}{\sigma + \mu}
+$$ {#eq-burstiness}
+
+## Analysis Outline
+
+This project will begin by measuring each graph metric across 5-minute non-overlapping rolling windows of each team's temporal passing network for each match. At each interval, each metric is measured alongside whether the team was winning, drawing or losing. Goal events complicate this approach, as they may fall inside a window, meaning the window contains two match states. To avoid this overlap, windows containing a goal event are excluded. The median of these window measurements is then calculated. The median is used because the metric distributions in @fig-graph-metrics-distributions are not normally distributed, making parametric significance tests inappropriate.
+
+To determine whether median graph values differ significantly across winning, drawing and losing states, ranked values across match status groups are compared using a Kruskal-Wallis test. Where this test is significant, a post-hoc Dunn's test is used to compare each match-status pair across each metric.
+
+To assess effect size, Cliff's delta [@meisselUsingCliffsDelta2024] is used to compare two groups by identifying which group's values tend to be higher. A value of $1$ indicates that every value in group A is higher than every value in group B, $−1$ indicates the opposite pattern, and $0$ indicates identical distributions.
+
+$$
+\delta = \frac{\left|\left(x_{i}^{(1)} > x_{i}^{(2)}\right) - \left(x_{i}^{(1)} < x_{i}^{(2)}\right)\right|}{n_{1}n_{2}}
+$$ {#eq-cliffs-delta}
+
+Multiple pairwise significance tests increase the probability of observing at least one false positive. To account for this, Bonferroni-corrected $p$-values are reported and used for interpretation. Analyses use a significance threshold of $\alpha = 0.05$, with corrected $p$-values calculated by multiplying the raw $p$-value by the number of tests, $m$. For the Kruskal-Wallis tests, $m=6$, as one test is performed for each metric. For Dunn's tests, three pairwise comparisons are performed for each metric, so $m=3$ within each set of tests.
+
+$$
+p_{\text{Bonferroni}} = p_{raw} \times m
+$$ {#eq-bonferroni}
+
+One potential confound is pass count, as a higher volume of passes creates more opportunities for passing combinations, potentially increasing metrics such as global clustering coefficient and density. Winning states are likely to contain more passes than losing states because winning teams generally have higher possession. To examine the importance of match status while controlling for pass count, an OLS linear regression model is fitted to each metric individually, using `winning vs losing`, `drawing vs losing` and `pass_count` as predictors. Although significant differences may be observed in the earlier tests, these regressions indicate whether observed differences are largely explained by different pass counts between match states. Again, $p$-values are Bonferroni corrected.
 
 # Results
 
-Elit imperdiet aenean varius conubia sagittis orci ultrices. Ridiculus conubia accumsan aliquam mi penatibus molestie fringilla proin. Ullamcorper blandit libero sapien etiam cum justo vel habitant nostra? Molestie tincidunt lobortis dis accumsan curae mi maecenas aptent bibendum eget lacus ad torquent lobortis mattis sagittis aliquam!
+![Graph Metrics Boxplots by Match Status]("../figures/metrics_by_match_state_boxplots.png"){width=100% fig-pos="H" #fig-metrics-boxplots}
 
-Lorem accumsan pharetra est cubilia placerat cubilia est fusce natoque laoreet rutrum porta pellentesque tempus! Inceptos arcu augue phasellus nunc ad aptent sem pulvinar maecenas. Tempor porttitor velit fermentum ornare convallis consequat proin mauris. Magna tortor non integer proin semper ad malesuada cras orci.
+@fig-metrics-boxplots shows boxplots for each match status across each graph metrics being measured. Density, reciprocity and global clustering coefficient subplots show winning match statuses are slightly higher on average, followed by drawing and then losing statuses. Out degree centralisation and burstiness do not appear to vary across match status, whilst median inter-event time shows losing statuses to be slightly higher than drawing which is also higher than winning. It is worth noting that median differences are quite small with a similar range across match statuses for each graph metric, possibly suggesting that different passing behaviours (e.g. positional vs direct play) are being aggregated across match statuses.
 
-Lorem accumsan pharetra est cubilia placerat cubilia est fusce natoque laoreet rutrum porta pellentesque tempus! Inceptos arcu augue phasellus nunc ad aptent sem pulvinar maecenas. Tempor porttitor velit fermentum ornare convallis consequat proin mauris. Magna tortor non integer proin semper ad malesuada cras orci.
+![Graph Metrics Over Time by Match Status]("../figures/metrics_over_time_by_state.png"){width=100% fig-pos="H" #fig-metrics-over-time}
 
-Consectetur consequat aptent habitasse dignissim magna feugiat consequat nisl praesent nunc cras tellus? Suscipit curae quis lacus hac rutrum primis sem sem magnis pharetra leo odio parturient libero odio. Mattis praesent maecenas penatibus dapibus hendrerit venenatis libero tellus nascetur. Dis maecenas cursus aptent purus.
+@fig-metrics-over-time shows each graph metric plotted over $90$ minutes in each match, split by match status. Density, reciprocity and global clustering coefficient appear to decrease slightly over the match across all statuses, whilst winning statuses remain consistently higher than drawing and losing states. This suggests that, when winning, teams involve more players in possession, are slightly less direct and involve more passing triangles compared to drawing and losing statuses. In line with @fig-metrics-boxplots, out-degree centralisation and burstiness do not appear to differ across match statuses over the match. Interestingly, burstiness appears to reduce in the last 15 minutes for drawing teams, suggesting passing tempo becomes slightly more regular towards the end. Median inter-event time generally increases over the match for all match states, possibly due to player fatigue. Although variance within each status appears quite large, winning statuses appear to have consistently lower median inter-event times than drawing and losing statuses.
 
-Amet quis rutrum sem senectus porttitor torquent habitasse quis commodo ut. Varius at facilisi hendrerit suscipit lacinia enim dui pharetra. Condimentum cum molestie class rutrum porttitor ultricies cursus cum nec nam potenti donec vel! Iaculis dictum ad?
+```{python}
+#| echo: false
+#| label: tbl-kruskal-wallis-significance-tests-results
+#| tbl-cap: "Kruskal-Wallis Significance Test Results"
+#| tbl-cap-location: bottom
+#| tbl-pos: H
+from IPython.display import display, Latex
 
-Sit suscipit conubia nisi integer vel suscipit torquent taciti. Urna eu phasellus urna nullam varius nascetur ultricies fringilla. Vivamus platea auctor curabitur senectus natoque morbi dignissim proin pulvinar netus?
+display(
+    Latex(
+        match_state_kruskal_tests_df.to_latex(
+            index=False,
+            escape=True,
+            float_format="%.3f",
+            column_format="p{3cm} p{1.5cm} p{1.5cm} p{1.5cm} p{1.5cm} p{1.5cm} p{1.5cm}"
+        )
+    )
+)
+```
 
-Elit semper laoreet tristique etiam egestas arcu ut. Lacus condimentum diam facilisis quam tellus magnis sollicitudin a suspendisse penatibus convallis tellus felis urna. Montes pulvinar ultrices himenaeos interdum nostra imperdiet per mauris luctus. Integer cubilia vestibulum vestibulum parturient cubilia morbi orci dictumst morbi sodales faucibus. Maecenas magnis et nulla nulla.
+@tbl-kruskal-wallis-significance-tests-results shows results from the Kruskal-Wallis tests. Reflecting the patterns observed in @fig-metrics-boxplots and @fig-metrics-over-time, median burstiness ($H(2) = 2.556, p=1$) and median out degree centralisation ($H(2)=7.260, p=0.159$) do not significantly differ across match statuses.
 
-Lorem nullam nunc habitasse blandit eleifend est mauris. Lacus class mauris interdum netus quisque volutpat. Aliquet at cum lobortis odio dapibus nunc porttitor ullamcorper? Suscipit nostra mi vulputate etiam purus tristique posuere augue orci sociis lectus justo a condimentum nascetur nibh.
+```{python}
+#| echo: false
+#| label: tbl-pairwise-significance-tests-results
+#| tbl-cap: "Pairwise Significance Test Results"
+#| tbl-cap-location: bottom
+#| tbl-pos: H
+from IPython.display import display, Latex
 
-Elit varius diam quam magnis suscipit leo aptent congue? Proin placerat ultrices interdum mollis platea integer ac pharetra vulputate lacinia. Viverra nostra bibendum lacus lobortis varius condimentum eleifend faucibus odio justo montes sagittis? Eget imperdiet class tellus tincidunt dictumst sem ridiculus quam? Eget rutrum fames ridiculus eget pretium neque libero per! Eget dignissim magna nunc nulla dis orci interdum tellus tortor risus ut.
+display(
+    Latex(
+        match_state_pairwise_tests_df.to_latex(
+            index=False,
+            escape=True,
+            float_format="%.3f",
+            column_format="p{2.5cm} p{1.75cm} p{1.75cm} p{1.75cm} p{1.75cm} p{2cm} p{1.5cm}"
+        )
+    )
+)
+```
 
-Results olor convallis vulputate dictum mollis ante placerat dui parturient porttitor conubia vitae. Eros nec dignissim tortor nascetur laoreet mi nascetur interdum lacus donec? Non potenti elementum massa hendrerit odio taciti euismod sagittis rhoncus sodales montes mattis? Sociosqu luctus neque euismod elementum accumsan parturient sed morbi scelerisque sociis quis faucibus primis suscipit scelerisque.
+@tbl-pairwise-significance-tests-results shows results from post-hoc Dunn's tests for each metric which exhibited significant Kruskal-Wallis results. For each metric, winning and drawing statuses significantly differ from losing statuses, whilst there were no observed significant differences between winning and drawing statuses.
 
-Sit aenean sociosqu curae magna natoque sociis pulvinar sagittis et congue. Sodales magna montes potenti tristique quis? Id suscipit lobortis suspendisse felis taciti massa vitae convallis in montes. Mauris sodales parturient mus tellus mollis dapibus felis vel? Dui malesuada nibh dui ut torquent taciti sodales tempor dapibus vitae montes?
+For the global clustering coefficient, we observe an effect size of $\delta=0.251$ and $\delta=0.247$, for winning vs losing and winning vs drawing, respectively. @meisselUsingCliffsDelta2024 suggest these generally correspond to a "small" effect size. Density again reveals winning and drawing statuses show small effect sizes of $\delta=0.308$ and $\delta=0.267$, respectively. Median inter-event time shows smaller effect sizes ($\delta=-0.176$ and $\delta=-0.166$, respectively), which are both negative and in line with the pattern observed in @fig-metrics-boxplots and @fig-metrics-over-time. Lastly, reciprocity again shows small effect sizes of $\delta=0.228$ and $\delta=0.212$, respectively. 
 
-Amet habitasse semper egestas ultricies libero fames orci primis mus sapien fringilla. Pretium tellus convallis bibendum aliquet rutrum potenti! Fringilla et et enim! Lorem molestie lacinia elementum nostra sem et dui condimentum nisl porttitor suspendisse. Felis enim semper nec semper odio.
+From these results, we generally observe that losing statuses are distinct from other statuses across each metric, showing overall low global clustering coefficient, density, reciprocity and higher median inter-event time. Losing states are therefore characterised by significantly less usage of passing combinations, incorporation of the entire team during possession, more direct passing and a lower passing tempo. The non-significant finding between winning and drawing statuses is somewhat in line with findings from @pracaInfluenceMatchStatus2019, suggesting that at least when considered in aggregate, winning and drawing statuses do not significantly differ in terms of these $6$ metrics.
 
-# Conclusions
+![Pass Count Over Time by Match Status]("../figures/pass_count_over_match_time_by_state.png"){width=100% fig-pos="H" #fig-pass-count-over-time}
 
-Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Adipiscing elit duis tristique sollicitudin nibh. Integer vitae justo eget magna fermentum iaculis. Viverra ipsum nunc aliquet bibendum enim facilisis gravida. Pellentesque id nibh tortor id aliquet. Erat nam at lectus urna duis convallis convallis tellus. Risus quis varius quam quisque id diam. Morbi tristique senectus et netus et. Platea dictumst quisque sagittis purus sit. Et malesuada fames ac turpis egestas. Cursus in hac habitasse platea. Id venenatis a condimentum vitae. Turpis egestas maecenas pharetra convallis posuere. Fermentum et sollicitudin ac orci. Id aliquet lectus proin nibh nisl condimentum. Non pulvinar neque laoreet suspendisse interdum.
+@fig-pass-count-over-time shows how pass counts vary between match statuses over the course of the match. We can see that winning statuses have consistently have higher pass counts during matches, with little difference between drawing and losing apart from the first $5$ minutes where losing statuses have much higher pass counts. 
 
-Nisl rhoncus mattis rhoncus urna neque viverra. Eget nulla facilisi etiam dignissim diam quis enim lobortis scelerisque. Sed velit dignissim sodales ut eu. Egestas congue quisque egestas diam. Mi eget mauris pharetra et ultrices neque ornare aenean. Neque egestas congue quisque egestas diam in arcu. Amet consectetur adipiscing elit duis tristique sollicitudin. Lorem ipsum dolor sit amet consectetur adipiscing elit ut. Commodo viverra maecenas accumsan lacus. Faucibus nisl tincidunt eget nullam non. 
+```{python}
+#| echo: false
+#| label: tbl-pass-count-kruskal
+#| tbl-cap: "Pass Count Kruskal-Wallis Test Results"
+#| tbl-cap-location: bottom
+#| tbl-pos: H
+from IPython.display import display, Latex
+
+display(
+    Latex(
+        pass_count_kruskal_test_df.to_latex(
+            index=False,
+            escape=True,
+            float_format="%.3f",
+            column_format="p{3cm} p{1.5cm} p{1.5cm} p{1.5cm} p{1.5cm} p{1.5cm} p{1.5cm}"
+        )
+    )
+)
+```
+
+@tbl-pass-count-kruskal reveals at least $1$ match status median pass count significantly differs from the rest.
+
+```{python}
+#| echo: false
+#| label: tbl-pass-count-dunn
+#| tbl-cap: "Pass Count Dunn's Test Results"
+#| tbl-cap-location: bottom
+#| tbl-pos: H
+from IPython.display import display, Latex
+
+display(
+    Latex(
+        pass_count_dunn_pairwise_tests_df.to_latex(
+            index=False,
+            escape=True,
+            float_format="%.3f",
+            column_format="p{2.5cm} p{1.75cm} p{1.75cm} p{1.75cm} p{1.75cm} p{2cm} p{1.5cm}"
+        )
+    )
+)
+```
+
+Post-hoc Dunn's tests shown in @tbl-pass-count-dunn reveal that, as with the graph metrics, winning and drawing status medians significantly differ from losing statuses,  whereas winning and drawing do not. This finding is somewhat contrasted by @fig-pass-count-over-time, where it would seem drawing and losing pass counts are fairly similar across the match, whilst each are fairly lower than winning statuses. 
+
+Nonetheless, it is evident that significant differences in pass counts between match statuses are present. This introduced a potential confound for the observed differences between graph metrics. 
+
+```{python}
+#| echo: false
+#| label: tbl-regression-results
+#| tbl-cap: "Regression Results"
+#| tbl-cap-location: bottom
+#| tbl-pos: H
+from IPython.display import display, Latex
+
+display(
+    Latex(
+        pass_count_control_results_df.to_latex(
+            index=False,
+            escape=True,
+            float_format="%.3f",
+            column_format="p{2cm} p{2cm} p{1.75cm} p{1.5cm} p{1.5cm} p{1.25cm} p{1.5cm} p{1.25cm}"
+        )
+    )
+)
+```
+
+@tbl-regression-results shows results from the regression models constructed to predict each metric using match status and pass count as predictor variables, providing some insight to the relationship between each metric and match status whilst accounting for pass count. For the match status predictor, the losing status is used as the reference class as winning vs drawing median differences are already known to be non-significant. 
+
+The regression results show that pass count is a significant predictor in each model, with each match status predictor value being non-significant, except from winning vs losing for median inter-event time. This model provides an interesting finding, suggesting that once pass count is controlled for, winning match statuses have a higher median inter-event time than losing statuses. This seems to contradict the findings from @fig-metrics-over-time and @tbl-pairwise-significance-tests-results, which show that winning statuses show significantly lower median inter-event times. 
+
+# Conclusion
+
+This report investigated whether teams' passing networks change significantly when winning, drawing or losing during matches. Temporal passing networks were constructed for each team in `{python} number_of_matches` WSL matches across $3$ seasons. Using non-overlapping $5$-minute windows, $6$ graph metrics measured the topological and temporal behaviour of each window across $3$ match status categories, determined by the scoreline during that window. Values were aggregated across matches to produce median values for each temporal window, then aggregated again to provide a single metric value for each match status within each match. Match statuses were compared using non-parametric significance testing. Given significant differences in pass count, which introduced a confound, regression models were constructed for each metric using match status and pass count as predictors.
+
+Considering the significance tests and regression analysis together, we may conclude that although significant differences between winning vs losing and drawing vs losing statuses were observed for global clustering coefficient, density, reciprocity and median inter-event time, these metrics are largely explained by variation in pass count rather than genuine match-status effects. One result contradicted this pattern: winning vs losing remained a significant predictor of median inter-event time after controlling for pass count. However, this reversed the initial significance-test finding, where winning statuses exhibited lower median inter-event times than losing statuses. Controlling for pass count instead suggested that winning statuses had higher median inter-event times. Overall, much of the variation in passing network behaviour between match statuses appears driven by pass volume.
+
+One limitation of this report is the use of $5$-minute rolling windows to produce temporal networks. Within a $5$-minute period, possession may change hands multiple times and may not be distributed evenly between winning, drawing and losing teams. This is reflected in the regression findings, which suggest that much variation in passing behaviour is driven by pass volume. An alternative approach would be to segment passing networks by possession, demarked by continuous periods where a team possesses the ball, rather than by fixed-time windows. Whilst fixed-time windows allow simpler comparison, observing passing behaviour within possessions may better account for variation in pass counts and reveal genuine behavioural differences. This windowed approach also required windows involving goals to be excluded, preventing passing behaviour immediately around goals from being observed, despite these periods potentially being interesting and behaviourally distinct. Future work may therefore benefit from moving from fixed windows to possession sequences.
+
+Another limitation is that aggregating only by match status may not provide sufficient resolution to observe meaningful variation in passing behaviour. There is likely substantial variation between teams within a single match status. For instance, one winning team may play a positional style whilst another adopts a counter-attacking style, with each exhibiting large differences in passing behaviour. Aggregating across tactical styles prevents this from being explored. Future work may seek to identify passing behaviours characteristic of different styles of play, classify passing networks by style, and then observe variation between match statuses.
+
+To conclude, the findings suggest that variation in passing behaviour between temporal networks from different match statuses is largely due to variation in pass count.
+
+
+{{< pagebreak >}}

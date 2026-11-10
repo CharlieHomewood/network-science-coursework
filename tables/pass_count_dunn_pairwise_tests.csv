@@ -1,0 +1,4 @@
+Metric,State A,State B,A median,B median,Corrected p-value,Cliff's delta
+pass_count,drawing,losing,22.0,18.416666666666668,8.197230282627073e-12,0.28499974083864615
+pass_count,winning,drawing,23.0,22.0,1.0,0.01306475709649168
+pass_count,winning,losing,23.0,18.416666666666668,8.067181673993853e-10,0.27296134147588375
